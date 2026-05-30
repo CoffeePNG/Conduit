@@ -1,0 +1,1 @@
+{"id":"conduit","name":"Conduit","version":"1.0.0","description":"Staff utility to send and retrieve players across proxied servers","authors":["CoffeePNG"],"dependencies":[],"main":"dev.coffeepng.conduit.ConduitPlugin"}
