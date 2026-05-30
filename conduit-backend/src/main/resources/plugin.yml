@@ -1,0 +1,34 @@
+name: ConduitBackend
+version: 1.0.0
+main: dev.coffeepng.conduit.backend.ConduitBackendPlugin
+api-version: "1.21"
+description: Backend companion for the Conduit proxy plugin
+authors: [CoffeePNG]
+
+commands:
+  ct:
+    description: Send or retrieve a player across servers
+    usage: /ct <send|get> <player> [server]
+    permission: conduit.use
+  cts:
+    description: Send a player to a server
+    usage: /cts <player> <server>
+    permission: conduit.send
+  ctg:
+    description: Retrieve a player to your current server
+    usage: /ctg <player>
+    permission: conduit.get
+
+permissions:
+  conduit.send:
+    description: Use /ct send and /cts
+    default: op
+  conduit.get:
+    description: Use /ct get and /ctg
+    default: op
+  conduit.use:
+    description: Access to /ct base command
+    default: op
+    children:
+      conduit.send: true
+      conduit.get: true
