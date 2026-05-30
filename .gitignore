@@ -1,0 +1,9 @@
+# Maven build output
+target/
+
+# OS / editor junk
+.DS_Store
+*.swp
+.idea/
+*.iml
+.vscode/

@@ -41,7 +41,15 @@ public class ConduitMessageListener {
 
         try {
             DataInputStream in = new DataInputStream(new ByteArrayInputStream(event.getData()));
-            byte subcommand        = in.readByte();
+            byte subcommand = in.readByte();
+
+            // subcommand 2 = backend requesting the live server list. Reply down the
+            // same connection and stop — no further fields are present in a request.
+            if (subcommand == 2) {
+                replyWithServerList((ServerConnection) event.getSource());
+                return;
+            }
+
             String senderUuid      = in.readUTF();
             String targetName      = in.readUTF();
             String destinationName = in.readUTF();
@@ -76,15 +84,19 @@ public class ConduitMessageListener {
             Player target = targetOpt.get();
             RegisteredServer dest = destOpt.get();
             String destServerName = dest.getServerInfo().getName();
+            String sourceServerName = target.getCurrentServer()
+                .map(c -> c.getServerInfo().getName())
+                .orElse("");
 
             String action = subcommand == 0 ? "Sent" : "Retrieved";
+            String fromInfo = sourceServerName.isEmpty() ? "" : " from " + sourceServerName;
             String targetMsg = subcommand == 0
                 ? "You were sent to " + destServerName + " by a staff member."
                 : "You were retrieved to " + destServerName + " by a staff member.";
 
             target.createConnectionRequest(dest).connect().thenAccept(result -> {
                 if (result.isSuccessful()) {
-                    sender.sendMessage(Component.text(action + " " + target.getUsername() + " to " + destServerName + ".", NamedTextColor.GREEN));
+                    sender.sendMessage(Component.text(action + " " + target.getUsername() + fromInfo + " to " + destServerName + ".", NamedTextColor.GREEN));
                     target.sendMessage(Component.text(targetMsg, NamedTextColor.YELLOW));
                 } else {
                     String reason = result.getReasonComponent()
@@ -98,6 +110,23 @@ public class ConduitMessageListener {
 
         } catch (Exception e) {
             // Malformed message — ignore
+        }
+    }
+
+    /** Sends the proxy's full registered-server list back to the requesting backend. */
+    private void replyWithServerList(ServerConnection connection) {
+        String csv = server.getAllServers().stream()
+            .map(s -> s.getServerInfo().getName())
+            .collect(java.util.stream.Collectors.joining(","));
+
+        try {
+            java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+            java.io.DataOutputStream out = new java.io.DataOutputStream(buf);
+            out.writeByte(2); // response tag, mirrors the request
+            out.writeUTF(csv);
+            connection.sendPluginMessage(ConduitPlugin.CHANNEL, buf.toByteArray());
+        } catch (Exception e) {
+            // Failed to reply — backend will fall back to its config list
         }
     }
 }

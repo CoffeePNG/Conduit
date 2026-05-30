@@ -96,7 +96,7 @@ public class ConduitBackendCommand implements CommandExecutor, TabCompleter {
         // /cts <player> <server>
         if (cmd.equals("cts")) {
             if (args.length == 1) return matchPlayers(args[0]);
-            if (args.length == 2) return List.of("<server>");
+            if (args.length == 2) return matchServers(args[1]);
             return List.of();
         }
 
@@ -110,7 +110,7 @@ public class ConduitBackendCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) return List.of("send", "get").stream()
             .filter(s -> s.startsWith(args[0].toLowerCase())).toList();
         if (args.length == 2) return matchPlayers(args[1]);
-        if (args.length == 3 && args[0].equalsIgnoreCase("send")) return List.of("<server>");
+        if (args.length == 3 && args[0].equalsIgnoreCase("send")) return matchServers(args[2]);
         return List.of();
     }
 
@@ -118,6 +118,13 @@ public class ConduitBackendCommand implements CommandExecutor, TabCompleter {
         return Bukkit.getOnlinePlayers().stream()
             .map(Player::getName)
             .filter(n -> n.toLowerCase().startsWith(partial.toLowerCase()))
+            .sorted()
+            .collect(Collectors.toList());
+    }
+
+    private List<String> matchServers(String partial) {
+        return plugin.getProxyServers().stream()
+            .filter(s -> s.toLowerCase().startsWith(partial.toLowerCase()))
             .sorted()
             .collect(Collectors.toList());
     }
