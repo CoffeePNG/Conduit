@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
@@ -27,6 +28,9 @@ import java.util.List;
 public class PlayerListSync implements PluginMessageListener {
 
     private static final byte REQUEST_PLAYERS = 3;
+
+    private static final TextColor GRADIENT_BLUE = TextColor.color(0x3B82F6);
+    private static final TextColor GRADIENT_PURPLE = TextColor.color(0x9333EA);
 
     // Cycled through deterministically per server name so the same server always
     // shows the same hover color, without needing to track assignments anywhere.
@@ -87,9 +91,10 @@ public class PlayerListSync implements PluginMessageListener {
         players.sort(Comparator.comparing(PlayerEntry::name, String.CASE_INSENSITIVE_ORDER));
 
         viewer.sendMessage(Component.text()
-            .append(Component.text("Get a Player ", NamedTextColor.GOLD, TextDecoration.BOLD))
+            .append(gradient("[Conduit] ", GRADIENT_BLUE, GRADIENT_PURPLE))
+            .append(Component.text("Get a Player ", GRADIENT_PURPLE, TextDecoration.BOLD))
             .append(Component.text("(hover for server) ", NamedTextColor.GRAY))
-            .append(Component.text("— " + players.size() + " online", NamedTextColor.DARK_GRAY))
+            .append(Component.text("- " + players.size() + " online", NamedTextColor.GREEN))
             .build());
 
         var line = Component.text().append(Component.text(" "));
@@ -110,6 +115,17 @@ public class PlayerListSync implements PluginMessageListener {
     private static NamedTextColor colorFor(String server) {
         int index = Math.floorMod(server.hashCode(), SERVER_COLORS.length);
         return SERVER_COLORS[index];
+    }
+
+    /** Colors each character of {@code text} along a linear interpolation from {@code from} to {@code to}. */
+    private static Component gradient(String text, TextColor from, TextColor to) {
+        var builder = Component.text();
+        int lastIndex = text.length() - 1;
+        for (int i = 0; i <= lastIndex; i++) {
+            float t = lastIndex == 0 ? 0f : (float) i / lastIndex;
+            builder.append(Component.text(String.valueOf(text.charAt(i)), TextColor.lerp(t, from, to)));
+        }
+        return builder.build();
     }
 
     private record PlayerEntry(String name, String server) {}
