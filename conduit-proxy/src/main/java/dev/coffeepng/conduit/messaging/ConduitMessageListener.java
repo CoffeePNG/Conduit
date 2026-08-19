@@ -19,7 +19,7 @@ import java.util.Optional;
  * Receives plugin messages from backend servers on the conduit:cmd channel.
  *
  * Message format (DataOutputStream):
- *   byte   subcommand  (0 = send, 1 = get)
+ *   byte   subcommand  (0 = send, 1 = get, 2 = server-list request, 3 = player-list request)
  *   UTF    senderUuid
  *   UTF    targetPlayerName
  *   UTF    destinationServer  (send: explicit server; get: sender's current server written by backend)
@@ -47,6 +47,14 @@ public class ConduitMessageListener {
             // same connection and stop — no further fields are present in a request.
             if (subcommand == 2) {
                 replyWithServerList((ServerConnection) event.getSource());
+                return;
+            }
+
+            // subcommand 3 = backend requesting the network-wide online player list
+            // for /ctg with no argument. Only field present is the requester's UUID,
+            // used to exclude them from their own list.
+            if (subcommand == 3) {
+                replyWithPlayerList((ServerConnection) event.getSource(), in.readUTF());
                 return;
             }
 
@@ -127,6 +135,34 @@ public class ConduitMessageListener {
             connection.sendPluginMessage(ConduitPlugin.CHANNEL, buf.toByteArray());
         } catch (Exception e) {
             // Failed to reply — backend will fall back to its config list
+        }
+    }
+
+    /** Sends every online player (minus the requester) and their current server back to the requesting backend. */
+    private void replyWithPlayerList(ServerConnection connection, String requesterUuid) {
+        Optional<java.util.UUID> requesterId;
+        try {
+            requesterId = Optional.of(java.util.UUID.fromString(requesterUuid));
+        } catch (IllegalArgumentException e) {
+            requesterId = Optional.empty();
+        }
+        final Optional<java.util.UUID> excluded = requesterId;
+
+        String csv = server.getAllPlayers().stream()
+            .filter(p -> excluded.isEmpty() || !p.getUniqueId().equals(excluded.get()))
+            .map(p -> p.getUsername() + ":" + p.getCurrentServer()
+                .map(c -> c.getServerInfo().getName())
+                .orElse("?"))
+            .collect(java.util.stream.Collectors.joining(","));
+
+        try {
+            java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+            java.io.DataOutputStream out = new java.io.DataOutputStream(buf);
+            out.writeByte(3); // response tag, mirrors the request
+            out.writeUTF(csv);
+            connection.sendPluginMessage(ConduitPlugin.CHANNEL, buf.toByteArray());
+        } catch (Exception e) {
+            // Failed to reply — backend will just show nothing
         }
     }
 }
