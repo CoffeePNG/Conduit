@@ -86,4 +86,4 @@ The built jar will be at `target/conduit-1.0.0.jar`.
 - `/ct get` requires the staff member using the command to be **in-game** so Conduit knows which server to pull the player to.
 - Both commands notify the moved player with a message so they aren't confused.
 - Tab completion works for both player names and server names.
-- `/ctg` with no player name lists everyone online across the whole network, grouped by server, with each name clickable to pull them straight to you.
+- `/ctg` with no player name lists everyone online across the whole network as a single alphabetical, clickable list — hover a name to see (and color-code) which server they're on, click to pull them straight to you.
