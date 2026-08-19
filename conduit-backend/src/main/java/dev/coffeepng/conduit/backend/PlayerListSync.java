@@ -31,6 +31,7 @@ public class PlayerListSync implements PluginMessageListener {
 
     private static final TextColor GRADIENT_BLUE = TextColor.color(0x3B82F6);
     private static final TextColor GRADIENT_PURPLE = TextColor.color(0x9333EA);
+    private static final String SEPARATOR = "-".repeat(42);
 
     // Cycled through deterministically per server name so the same server always
     // shows the same hover color, without needing to track assignments anywhere.
@@ -92,7 +93,7 @@ public class PlayerListSync implements PluginMessageListener {
 
         viewer.sendMessage(Component.text()
             .append(gradient("[Conduit] ", GRADIENT_BLUE, GRADIENT_PURPLE))
-            .append(Component.text("Get a Player ", GRADIENT_PURPLE, TextDecoration.BOLD))
+            .append(Component.text("Get a Player ", GRADIENT_PURPLE))
             .append(Component.text("(hover for server) ", NamedTextColor.GRAY))
             .append(Component.text("- " + players.size() + " online", NamedTextColor.GREEN))
             .build());
@@ -110,6 +111,7 @@ public class PlayerListSync implements PluginMessageListener {
         }
 
         viewer.sendMessage(line.build());
+        viewer.sendMessage(Component.text(SEPARATOR, NamedTextColor.DARK_GRAY));
     }
 
     private static NamedTextColor colorFor(String server) {
