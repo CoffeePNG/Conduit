@@ -65,11 +65,12 @@ public class ConduitBackendCommand implements CommandExecutor, TabCompleter {
 
     private void handleGet(Player sender, String[] args) {
         if (!sender.hasPermission(PERM_GET)) { noPermission(sender); return; }
-        if (args.length < 1) { sender.sendMessage("§eUsage: /ct get <player>"); return; }
+        if (args.length < 1) {
+            plugin.getPlayerListSync().requestPlayerList(sender);
+            return;
+        }
 
-        String currentServer = plugin.getServer().getPort() + ""; // fallback
-        // Use the server name from the server-name property in server.properties — but
-        // the proxy knows the player's current server already via their connection,
+        // The proxy knows the player's current server already via their connection,
         // so we pass the sender's UUID and let the proxy resolve it there.
         // We send an empty destination; the proxy uses the sender's current server for "get".
         forwardToProxy(sender, (byte) 1, args[0], "");

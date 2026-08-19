@@ -14,6 +14,7 @@ public class ConduitBackendPlugin extends JavaPlugin {
     private static final long REFRESH_TICKS = 6000L;
 
     private volatile List<String> proxyServers = List.of();
+    private PlayerListSync playerListSync;
 
     @Override
     public void onEnable() {
@@ -23,6 +24,9 @@ public class ConduitBackendPlugin extends JavaPlugin {
         ServerListSync sync = new ServerListSync(this);
         getServer().getMessenger().registerIncomingPluginChannel(this, CHANNEL, sync);
         getServer().getPluginManager().registerEvents(sync, this);
+
+        playerListSync = new PlayerListSync(this);
+        getServer().getMessenger().registerIncomingPluginChannel(this, CHANNEL, playerListSync);
 
         // Periodically re-request the list so it tracks proxy changes without a restart.
         getServer().getScheduler().runTaskTimer(this, () -> {
@@ -43,6 +47,10 @@ public class ConduitBackendPlugin extends JavaPlugin {
 
     public List<String> getProxyServers() {
         return proxyServers;
+    }
+
+    public PlayerListSync getPlayerListSync() {
+        return playerListSync;
     }
 
     /** Updates the cached server list with the live list reported by the proxy. */
