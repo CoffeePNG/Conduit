@@ -87,8 +87,8 @@ public class PlayerListSync implements PluginMessageListener {
         players.sort(Comparator.comparing(PlayerEntry::name, String.CASE_INSENSITIVE_ORDER));
 
         viewer.sendMessage(Component.text()
-            .append(Component.text("Conduit ", NamedTextColor.GOLD, TextDecoration.BOLD))
-            .append(Component.text("(Hover to see server) ", NamedTextColor.GRAY))
+            .append(Component.text("Get a Player ", NamedTextColor.GOLD, TextDecoration.BOLD))
+            .append(Component.text("(hover for server) ", NamedTextColor.GRAY))
             .append(Component.text("— " + players.size() + " online", NamedTextColor.DARK_GRAY))
             .build());
 
