@@ -84,8 +84,11 @@ public class PlayerListSync implements PluginMessageListener {
             players.add(new PlayerEntry(parts[0], parts[1]));
         }
 
+        viewer.sendMessage(Component.text(SEPARATOR, NamedTextColor.DARK_GRAY));
+
         if (players.isEmpty()) {
             viewer.sendMessage(Component.text("No other players online.", NamedTextColor.GRAY));
+            viewer.sendMessage(Component.text(SEPARATOR, NamedTextColor.DARK_GRAY));
             return;
         }
 

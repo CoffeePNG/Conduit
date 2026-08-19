@@ -138,21 +138,31 @@ public class ConduitMessageListener {
         }
     }
 
-    /** Sends every online player (minus the requester) and their current server back to the requesting backend. */
+    /**
+     * Sends every online player back to the requesting backend, minus the requester
+     * themself and anyone already on the requester's current server — pulling either
+     * would be a no-op.
+     */
     private void replyWithPlayerList(ServerConnection connection, String requesterUuid) {
-        Optional<java.util.UUID> requesterId;
+        Optional<Player> requesterLookup;
         try {
-            requesterId = Optional.of(java.util.UUID.fromString(requesterUuid));
+            requesterLookup = server.getPlayer(java.util.UUID.fromString(requesterUuid));
         } catch (IllegalArgumentException e) {
-            requesterId = Optional.empty();
+            requesterLookup = Optional.empty();
         }
-        final Optional<java.util.UUID> excluded = requesterId;
+        final Optional<Player> requester = requesterLookup;
+
+        String requesterServer = requester.flatMap(Player::getCurrentServer)
+            .map(c -> c.getServerInfo().getName())
+            .orElse(null);
 
         String csv = server.getAllPlayers().stream()
-            .filter(p -> excluded.isEmpty() || !p.getUniqueId().equals(excluded.get()))
-            .map(p -> p.getUsername() + ":" + p.getCurrentServer()
+            .filter(p -> requester.isEmpty() || !p.getUniqueId().equals(requester.get().getUniqueId()))
+            .map(p -> new String[] { p.getUsername(), p.getCurrentServer()
                 .map(c -> c.getServerInfo().getName())
-                .orElse("?"))
+                .orElse("?") })
+            .filter(pair -> requesterServer == null || !pair[1].equals(requesterServer))
+            .map(pair -> pair[0] + ":" + pair[1])
             .collect(java.util.stream.Collectors.joining(","));
 
         try {
